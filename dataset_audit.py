@@ -3,33 +3,25 @@ import numpy as np
 import os
 import pandas as pd
 
-# Define your classes based on the colors in your masks
-CLASS_MAP = {
-    0: "Sand",
-    2: "Rocks",
-    5: "Bushes"
-}
-
-def audit_dataset(mask_dir):
+def audit_dataset_v2(mask_dir):
     stats = []
     for file in os.listdir(mask_dir):
-        if file.startswith("pred_") or not file.endswith(".png"):
-            continue
+        if not file.endswith(".png") or file.startswith("overlay"): continue
             
         mask = cv2.imread(os.path.join(mask_dir, file), 0)
-        h, w = mask.shape
-        total_pixels = h * w
+        total_pixels = mask.size
         
-        file_stats = {"filename": file}
-        for val, name in CLASS_MAP.items():
-            count = np.sum(mask == val)
-            file_stats[name] = round((count / total_pixels) * 100, 2)
+        # Define ranges instead of single numbers
+        sand = np.sum((mask > 0) & (mask <= 100))
+        obstacles = np.sum(mask > 100)
         
-        stats.append(file_stats)
+        stats.append({
+            "filename": file,
+            "Sand_Area%": round((sand / total_pixels) * 100, 2),
+            "Obstacle_Area%": round((obstacles / total_pixels) * 100, 2)
+        })
     
     return pd.DataFrame(stats)
 
-df = audit_dataset("masks")
-print("--- Dataset Class Distribution (%) ---")
+df = audit_dataset_v2("masks")
 print(df)
-df.to_csv("dataset_audit.csv", index=False)

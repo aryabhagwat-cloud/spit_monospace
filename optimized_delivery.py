@@ -22,3 +22,4 @@ def generate_final_report():
         print("Run your experiments first to generate the report!")
 
 generate_final_report()
+
